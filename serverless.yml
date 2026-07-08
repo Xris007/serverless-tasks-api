@@ -14,6 +14,7 @@ provider:
     DB_USER: ${env:DB_USER}
     DB_PASSWORD: ${env:DB_PASSWORD}
     DB_NAME: ${env:DB_NAME}
+    JWT_SECRET: ${env:JWT_SECRET}
     STAGE: ${self:provider.stage}
   iam:
     role:
@@ -25,12 +26,10 @@ provider:
             - logs:PutLogEvents
           Resource: '*'
 
-# Two logical microservices sharing one API Gateway:
-# - "tasks" service: CRUD for tasks (business domain)
-# - "health" service: independent health/monitoring endpoint
-# Each Lambda is deployed, scaled, and can be versioned independently,
-# even though they're grouped under the same serverless.yml for this demo.
 functions:
+  authorizer:
+    handler: src/handlers/authorizer.handler
+
   createTask:
     handler: src/handlers/createTask.handler
     events:
@@ -38,6 +37,7 @@ functions:
           path: /tasks
           method: post
           cors: true
+          authorizer: ${self:custom.jwtAuthorizer}
 
   listTasks:
     handler: src/handlers/listTasks.handler
@@ -71,15 +71,13 @@ functions:
           method: delete
           cors: true
 
-  # Independent microservice: runs on a schedule (EventBridge), not tied
-  # to an HTTP route — demonstrates event-driven serverless beyond REST.
   health:
     handler: src/handlers/health.handler
     events:
       - http:
           path: /health
           method: get
-      - schedule: rate(15 minutes) # periodic self-check, decoupled from user traffic
+      - schedule: rate(15 minutes)
 
 plugins:
   - serverless-esbuild
@@ -92,3 +90,7 @@ custom:
     sourcemap: true
     target: node20
     exclude: ['aws-sdk']
+  jwtAuthorizer:
+    name: authorizer
+    identifySource: method.request.header.Authorization
+    resultTtlInSeconds: 300
