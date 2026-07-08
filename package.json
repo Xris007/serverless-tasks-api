@@ -4,6 +4,7 @@
   "description": "Serverless REST API on AWS Lambda + API Gateway + MySQL, built with the Serverless Framework",
   "scripts": {
     "build": "tsc",
+    "test": "jest",
     "deploy": "serverless deploy",
     "deploy:prod": "serverless deploy --stage prod",
     "logs": "serverless logs -f",
@@ -16,11 +17,14 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.145",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.14.9",
     "esbuild": "^0.28.1",
+    "jest": "^30.4.2",
     "serverless": "^3.39.0",
     "serverless-esbuild": "^1.52.1",
     "serverless-offline": "^13.6.0",
+    "ts-jest": "^29.4.11",
     "typescript": "^5.5.3"
   }
 }
