@@ -1,0 +1,94 @@
+service: serverless-tasks-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 256
+  timeout: 10
+  environment:
+    DB_HOST: ${env:DB_HOST}
+    DB_USER: ${env:DB_USER}
+    DB_PASSWORD: ${env:DB_PASSWORD}
+    DB_NAME: ${env:DB_NAME}
+    STAGE: ${self:provider.stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: '*'
+
+# Two logical microservices sharing one API Gateway:
+# - "tasks" service: CRUD for tasks (business domain)
+# - "health" service: independent health/monitoring endpoint
+# Each Lambda is deployed, scaled, and can be versioned independently,
+# even though they're grouped under the same serverless.yml for this demo.
+functions:
+  createTask:
+    handler: src/handlers/createTask.handler
+    events:
+      - http:
+          path: /tasks
+          method: post
+          cors: true
+
+  listTasks:
+    handler: src/handlers/listTasks.handler
+    events:
+      - http:
+          path: /tasks
+          method: get
+          cors: true
+
+  getTask:
+    handler: src/handlers/getTask.handler
+    events:
+      - http:
+          path: /tasks/{id}
+          method: get
+          cors: true
+
+  updateTask:
+    handler: src/handlers/updateTask.handler
+    events:
+      - http:
+          path: /tasks/{id}
+          method: patch
+          cors: true
+
+  deleteTask:
+    handler: src/handlers/deleteTask.handler
+    events:
+      - http:
+          path: /tasks/{id}
+          method: delete
+          cors: true
+
+  # Independent microservice: runs on a schedule (EventBridge), not tied
+  # to an HTTP route — demonstrates event-driven serverless beyond REST.
+  health:
+    handler: src/handlers/health.handler
+    events:
+      - http:
+          path: /health
+          method: get
+      - schedule: rate(15 minutes) # periodic self-check, decoupled from user traffic
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node20
+    exclude: ['aws-sdk']

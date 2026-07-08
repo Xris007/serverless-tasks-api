@@ -1,0 +1,26 @@
+{
+  "name": "serverless-tasks-api",
+  "version": "1.0.0",
+  "description": "Serverless REST API on AWS Lambda + API Gateway + MySQL, built with the Serverless Framework",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "serverless deploy",
+    "deploy:prod": "serverless deploy --stage prod",
+    "logs": "serverless logs -f",
+    "remove": "serverless remove",
+    "offline": "serverless offline"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20.14.9",
+    "esbuild": "^0.28.1",
+    "serverless": "^3.39.0",
+    "serverless-esbuild": "^1.52.1",
+    "serverless-offline": "^13.6.0",
+    "typescript": "^5.5.3"
+  }
+}
